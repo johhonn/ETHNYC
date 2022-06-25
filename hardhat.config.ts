@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv'
 import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
 import { HardhatUserConfig } from 'hardhat/config'
-import './tasks/deploy'
+import './tasks/deploy_source'
 
 dotenv.config()
 
