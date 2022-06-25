@@ -2,7 +2,10 @@ import detectEthereumProvider from "@metamask/detect-provider"
 import { Identity } from "@semaphore-protocol/identity"
 import { Group } from "@semaphore-protocol/group"
 import { generateProof, packToSolidityProof } from "@semaphore-protocol/proof"
-import { providers } from "ethers"
+import { providers,Contract,getDefaultProvider } from "ethers"
+import {abi as targetABI}  from "../artifacts/contracts/target.sol/target.json"
+import {abi as sourceABI} from "../artifacts/contracts/source.sol/Source.json"
+
 import Head from "next/head"
 import React from "react"
 import styles from "../styles/Home.module.css"
@@ -18,7 +21,10 @@ export default function Home() {
         await provider.request({ method: "eth_requestAccounts" })
 
         const ethersProvider = new providers.Web3Provider(provider)
+        const sourceProvider = getDefaultProvider("goerli")
         const signer = ethersProvider.getSigner()
+        const TargetContract=new Contract('',targetABI,signer)
+        const SourceContract=new Contract('',sourceABI,signer)
         const message = await signer.signMessage("Mix your token here!")
 
         const identity = new Identity(message)
@@ -44,8 +50,7 @@ export default function Home() {
             console.log(Object.keys(solidityProof))
         }catch(e){
             console.log(e)
-        }
-       
+        }     
 
       
     }
@@ -66,6 +71,7 @@ export default function Home() {
 
         
         setLogs(`Your ZK commitment is ${idCommit}`)
+        return idCommit
     }
 
     return (

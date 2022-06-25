@@ -5,7 +5,7 @@ import 'hardhat-gas-reporter'
 import 'hardhat-dependency-compiler'
 import { HardhatUserConfig } from 'hardhat/config'
 import './tasks/deploy_source'
-
+import './tasks/deploy_target'
 dotenv.config()
 
 // You need to export an object to set up your config
@@ -17,8 +17,14 @@ const config: HardhatUserConfig = {
     paths: ['@semaphore-protocol/contracts/verifiers/Verifier20.sol'],
   },
   networks: {
-    ropsten: {
-      url: process.env.ROPSTEN_URL || '',
+    goerli: {
+      url: process.env.GOERLI_URL || '',
+      accounts:
+        process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
+      gasPrice: 90000000000,
+    },
+    rinkeby: {
+      url: process.env.RINKEBY_URL || '',
       accounts:
         process.env.PRIVATE_KEY !== undefined ? [process.env.PRIVATE_KEY] : [],
     },

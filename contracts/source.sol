@@ -31,7 +31,7 @@ contract Source {
         bool forceSlow;
 
         // Encode function of the target contract (from Target.sol)
-
+        IERC20(asset).transferFrom(msg.sender, address(this), depositValue);
         selector = bytes4(keccak256("addCommitment(uint256)"));
         forceSlow = true;
 

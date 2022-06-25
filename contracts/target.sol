@@ -10,7 +10,7 @@ import {IConnextHandler} from "@connext/nxtp-contracts/contracts/core/connext/in
 import {CallParams, XCallArgs} from "@connext/nxtp-contracts/contracts/core/connext/libraries/LibConnextStorage.sol";
 import {IExecutor} from "@connext/nxtp-contracts/contracts/core/connext/interfaces/IExecutor.sol";
 
-contract target is SemaphoreCore, SemaphoreGroups, Ownable {
+contract Target is SemaphoreCore, SemaphoreGroups, Ownable {
     mapping(uint256 => uint256) public groupDeposits;
     mapping(uint256 => uint256[]) public groupCommitments;
     uint256 total;
@@ -70,7 +70,11 @@ contract target is SemaphoreCore, SemaphoreGroups, Ownable {
         _addMember(entity, identityCommitment);
     }
 
-    function getTreeInfo(uint256 id) public view returns (uint256[], uint256) {
+    function getTreeInfo(uint256 id)
+        public
+        view
+        returns (uint256[] memory, uint256)
+    {
         return (groupCommitments[id], getRoot(id));
     }
 
