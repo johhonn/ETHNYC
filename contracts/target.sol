@@ -4,11 +4,11 @@ pragma solidity ^0.8.11;
 import "@semaphore-protocol/contracts/interfaces/IVerifier.sol";
 import "@semaphore-protocol/contracts/base/SemaphoreCore.sol";
 import "@semaphore-protocol/contracts/base/SemaphoreGroups.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {ERC20} from "@solmate/tokens/ERC20.sol";
-
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 import {IConnextHandler} from "@connext/nxtp-contracts/contracts/core/connext/interfaces/IConnextHandler.sol";
 import {CallParams, XCallArgs} from "@connext/nxtp-contracts/contracts/core/connext/libraries/LibConnextStorage.sol";
+import {IExecutor} from "@connext/nxtp-contracts/contracts/core/connext/interfaces/IExecutor.sol";
 
 contract target is SemaphoreCore, SemaphoreGroups, Ownable {
     mapping(uint256 => uint256) public groupDeposits;
@@ -19,7 +19,8 @@ contract target is SemaphoreCore, SemaphoreGroups, Ownable {
 
     // The origin Domain ID
     uint32 public originDomain;
-
+    IConnextHandler public immutable connext;
+    IExecutor public executor;
     // A modifier for permissioned function calls.
     // Note: This is an important security consideration. If your target
     //       contract function is meant to be permissioned, it must check
@@ -35,8 +36,9 @@ contract target is SemaphoreCore, SemaphoreGroups, Ownable {
         _;
     }
 
-    constructor(address _verifier) {
+    constructor(address _verifier, IConnextHandler _connext) {
         verifier = IVerifier(_verifier);
+        connext = _connext;
     }
 
     function createEntity(uint256 value) public override {
@@ -49,7 +51,7 @@ contract target is SemaphoreCore, SemaphoreGroups, Ownable {
     function addCommitment(uint256 entityId, uint256 identityCommitment)
         public
         override
-        onlyEditor(entityId)
+        onlyExecutor
     {
         _addMember(entityId, identityCommitment);
     }
@@ -57,12 +59,13 @@ contract target is SemaphoreCore, SemaphoreGroups, Ownable {
     function withdraw(
         bytes32 _sig,
         uint256 nullifierHash,
-        uint256[8] calldata_proof,
+        uint256[8] calldata _proof,
         uint256 entityId,
+        address to,
         uint32 destinationDomain,
         address asset
     ) public {
-        require(verify(_sig, _nullifierHash, _proof, entityId), "");
+        require(verify(_sig, nullifierHash, _proof, entityId), "");
         IERC20 token = IERC20(asset);
 
         // This contract approves transfer to Connext
@@ -100,7 +103,7 @@ contract target is SemaphoreCore, SemaphoreGroups, Ownable {
         uint8 depth = 20;
         uint256 root = getRoot(entityId);
 
-        _verifyProof(_sig, root, nullifierHash, entityId, proof, verifier);
+        _verifyProof(_sig, root, _nullifierHash, entityId, _proof, verifier);
 
         // Prevent double-greeting (nullifierHash = hash(root + identityNullifier)).
         // Every user can greet once.
