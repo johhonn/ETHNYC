@@ -31,7 +31,7 @@ export default function Home() {
         setLogs("Creating your Semaphore proof...")
 
         const greeting = "Hello world"
-
+        console.log(identity)
         const { proof, publicSignals } = await generateProof(identity, group, group.root, greeting, {
             wasmFilePath: "./semaphore.wasm",
             zkeyFilePath: "./semaphore.zkey"
