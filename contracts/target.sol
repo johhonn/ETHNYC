@@ -12,6 +12,7 @@ import {IExecutor} from "@connext/nxtp-contracts/contracts/core/connext/interfac
 
 contract target is SemaphoreCore, SemaphoreGroups, Ownable {
     mapping(uint256 => uint256) public groupDeposits;
+    mapping(uint256 => uint256[]) public groupCommitments;
     uint256 total;
     // The external verifier used to verify Semaphore proofs.
     IVerifier public verifier;
@@ -44,18 +45,33 @@ contract target is SemaphoreCore, SemaphoreGroups, Ownable {
         verifier = IVerifier(_verifier);
         connext = _connext;
         executor = IExecutor(_executor);
+        createEntity(10**18);
+        createEntity(5 * 10**18);
     }
 
     function createEntity(uint256 value) public {
-        _createGroup(total + 1, 20, 0);
-
-        groupDeposits[total + 1] = value;
         total++;
+        _createGroup(total, 20, 0);
+
+        groupDeposits[total] = value;
     }
 
     function addCommitment(uint256 identityCommitment) public onlyExecutor {
         //default to pool one
         _addMember(1, identityCommitment);
+        groupCommitments[1].push(identityCommitment);
+    }
+
+    function addTestCommitment(uint256 entity, uint256 identityCommitment)
+        public
+    {
+        //default to pool one
+        groupCommitments[entity].push(identityCommitment);
+        _addMember(entity, identityCommitment);
+    }
+
+    function getTreeInfo(uint256 id) public view returns (uint256[], uint256) {
+        return (groupCommitments[id], getRoot(id));
     }
 
     function withdraw(
@@ -94,6 +110,17 @@ contract target is SemaphoreCore, SemaphoreGroups, Ownable {
         });
 
         connext.xcall(xcallArgs);
+    }
+
+    function verifyTest(
+        bytes32 _sig,
+        uint256 _nullifierHash,
+        uint256[8] calldata _proof,
+        uint256 entityId
+    ) public view {
+        uint256 root = getRoot(entityId);
+
+        _verifyProof(_sig, root, _nullifierHash, entityId, _proof, verifier);
     }
 
     function verify(
