@@ -36,24 +36,26 @@ contract target is SemaphoreCore, SemaphoreGroups, Ownable {
         _;
     }
 
-    constructor(address _verifier, IConnextHandler _connext) {
+    constructor(
+        address _verifier,
+        IConnextHandler _connext,
+        address _executor
+    ) {
         verifier = IVerifier(_verifier);
         connext = _connext;
+        executor = IExecutor(_executor);
     }
 
-    function createEntity(uint256 value) public override {
+    function createEntity(uint256 value) public {
         _createGroup(total + 1, 20, 0);
 
         groupDeposits[total + 1] = value;
         total++;
     }
 
-    function addCommitment(uint256 entityId, uint256 identityCommitment)
-        public
-        override
-        onlyExecutor
-    {
-        _addMember(entityId, identityCommitment);
+    function addCommitment(uint256 identityCommitment) public onlyExecutor {
+        //default to pool one
+        _addMember(1, identityCommitment);
     }
 
     function withdraw(

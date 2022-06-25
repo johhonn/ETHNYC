@@ -27,7 +27,7 @@ export default function Home() {
         const group = new Group()
 
         group.addMembers(identityCommitments)
-
+        console.log(group.root)
         setLogs("Creating your Semaphore proof...")
 
         const greeting = "Hello world"
@@ -38,22 +38,7 @@ export default function Home() {
         })
         const solidityProof = packToSolidityProof(proof)
 
-        const response = await fetch("/api/greet", {
-            method: "POST",
-            body: JSON.stringify({
-                greeting,
-                nullifierHash: publicSignals.nullifierHash,
-                solidityProof: solidityProof
-            })
-        })
-
-        if (response.status === 500) {
-            const errorMessage = await response.text()
-
-            setLogs(errorMessage)
-        } else {
-            setLogs("Your anonymous greeting is onchain :)")
-        }
+        console.log(Object.keys(proof))
     }
 
     return (
