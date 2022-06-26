@@ -1,5 +1,6 @@
 import {IConnextHandler} from "@connext/nxtp-contracts/contracts/core/connext/interfaces/IConnextHandler.sol";
 import {CallParams, XCallArgs} from "@connext/nxtp-contracts/contracts/core/connext/libraries/LibConnextStorage.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
  * @title Source
@@ -31,7 +32,7 @@ contract Source {
         bool forceSlow;
 
         // Encode function of the target contract (from Target.sol)
-        //IERC20(asset).transferFrom(msg.sender, address(this), depositValue);
+        IERC20(asset).transferFrom(msg.sender, address(this), depositValue);
         selector = bytes4(keccak256("addCommitment(uint256)"));
         forceSlow = true;
 
