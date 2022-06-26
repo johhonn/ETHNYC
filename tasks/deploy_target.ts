@@ -3,7 +3,7 @@ import { task, types } from 'hardhat/config'
 import { poseidon_gencontract as poseidonContract } from 'circomlibjs'
 //n/a
 const RinkebyConnextHandler = '0x2307Ed9f152FA9b3DcDfe2385d279D8C2A9DF2b0'
-const Origin = '0xEB004c5cAC8139A8614301C5bab4543D186fCd92'
+const Origin = '0xF4B9bfB371BbFA0d1D2c56f712f766652BCd1859'
 
 //n-of-m source contract deployments
 const KovanConnextHandler = '0x3366A61A701FA84A86448225471Ec53c5c4ad49f'
@@ -14,7 +14,7 @@ task('deploy_target', '')
     async ({ logs }, hre): Promise<Contract | void> => {
       const poseidonABI = poseidonContract.generateABI(2)
       const poseidonBytecode = poseidonContract.createCode(2)
-
+      hre.run('compile')
       const [signer] = await hre.ethers.getSigners()
 
       const PoseidonLibFactory = new hre.ethers.ContractFactory(

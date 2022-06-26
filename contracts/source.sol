@@ -12,9 +12,15 @@ contract Source {
 
     IConnextHandler public immutable connext;
     uint256 public depositValue = 1 ether;
+    bool public slowForced;
 
     constructor(IConnextHandler _connext) {
         connext = _connext;
+        slowForced = true;
+    }
+
+    function toggleSlow() public {
+        slowForced = !slowForced;
     }
 
     /**
@@ -29,12 +35,11 @@ contract Source {
         uint256 commitment
     ) external payable {
         bytes4 selector;
-        bool forceSlow;
 
         // Encode function of the target contract (from Target.sol)
         IERC20(asset).transferFrom(msg.sender, address(this), depositValue);
+        IERC20(asset).approve(address(connext), type(uint256).max);
         selector = bytes4(keccak256("addCommitment(uint256)"));
-        forceSlow = true;
 
         bytes memory callData = abi.encodeWithSelector(selector, commitment);
 
@@ -46,7 +51,7 @@ contract Source {
             recovery: to, // fallback address to send funds to if execution fails on destination side
             callback: address(this), // this contract implements the callback
             callbackFee: 0, // fee paid to relayers; relayers don't take any fees on testnet
-            forceSlow: forceSlow, // option to force Nomad slow path (~30 mins) instead of paying 0.05% fee
+            forceSlow: slowForced, // option to force Nomad slow path (~30 mins) instead of paying 0.05% fee
             receiveLocal: false // option to receive the local Nomad-flavored asset instead of the adopted asset
         });
 
