@@ -1,96 +1,96 @@
-import { Contract } from 'ethers'
-import { task, types } from 'hardhat/config'
-import { poseidon_gencontract as poseidonContract } from 'circomlibjs'
-const RinkebyConnextHandler = '0x2307Ed9f152FA9b3DcDfe2385d279D8C2A9DF2b0'
-const RinkebyConnextExecutor = '0xB17Be17999ED91C8829554CBb1C1CcB1c8CD8134'
-const GoerliConenxtHandler = '0xEC3A723DE47a644b901DC269829bf8718F175EBF'
-const GoerliConnextExecutor = ''
-task('deploy_target', '')
-  .addOptionalParam<boolean>('logs', 'Print the logs', true, types.boolean)
-  .setAction(
-    async ({ logs }, hre): Promise<Contract | void> => {
-      const poseidonABI = poseidonContract.generateABI(2)
-      const poseidonBytecode = poseidonContract.createCode(2)
+import { Contract } from "ethers";
+import { task, types } from "hardhat/config";
+import { poseidon_gencontract as poseidonContract } from "circomlibjs";
+//n/a
+const RinkebyConnextHandler = "0x2307Ed9f152FA9b3DcDfe2385d279D8C2A9DF2b0";
+const RinkebyConnextExecutor = "0xA3E592305a9f484B024bAEa08a5B35CFd3098EaB";
 
-      const [signer] = await hre.ethers.getSigners()
+//n-of-m source contract deployments
+const KovanConnextHandler = "0x3366A61A701FA84A86448225471Ec53c5c4ad49f";
+const KovanConnextExecutor = "0xA3E592305a9f484B024bAEa08a5B35CFd3098EaB";
 
-      const PoseidonLibFactory = new hre.ethers.ContractFactory(
-        poseidonABI,
-        poseidonBytecode,
-        signer,
-      )
-      const poseidonLib = await PoseidonLibFactory.deploy()
+task("deploy_target", "")
+  .addOptionalParam<boolean>("logs", "Print the logs", true, types.boolean)
+  .setAction(async ({ logs }, hre): Promise<Contract | void> => {
+    const poseidonABI = poseidonContract.generateABI(2);
+    const poseidonBytecode = poseidonContract.createCode(2);
 
-      const Verifier20 = await hre.ethers.getContractFactory('Verifier20')
-      const instance = await Verifier20.deploy()
+    const [signer] = await hre.ethers.getSigners();
 
-      await instance.deployed()
+    const PoseidonLibFactory = new hre.ethers.ContractFactory(
+      poseidonABI,
+      poseidonBytecode,
+      signer
+    );
+    const poseidonLib = await PoseidonLibFactory.deploy();
 
-      logs &&
-        console.log(
-          `verfier contract has been deployed to: ${instance.address}`,
-        )
+    const Verifier20 = await hre.ethers.getContractFactory("Verifier20");
+    const instance = await Verifier20.deploy();
 
-      await poseidonLib.deployed()
-      logs &&
-        console.log(
-          `Poseidon library has been deployed to: ${poseidonLib.address}`,
-        )
-      console.log('deploying')
-      const IncrementalBinaryTreeLibFactory = await hre.ethers.getContractFactory(
-        'IncrementalBinaryTree',
-        {
-          libraries: {
-            PoseidonT3: poseidonLib.address,
-          },
+    await instance.deployed();
+
+    logs &&
+      console.log(`verfier contract has been deployed to: ${instance.address}`);
+
+    await poseidonLib.deployed();
+    logs &&
+      console.log(
+        `Poseidon library has been deployed to: ${poseidonLib.address}`
+      );
+    console.log("deploying");
+    const IncrementalBinaryTreeLibFactory = await hre.ethers.getContractFactory(
+      "IncrementalBinaryTree",
+      {
+        libraries: {
+          PoseidonT3: poseidonLib.address,
         },
-      )
+      }
+    );
 
-      const incrementalBinaryTreeLib = await IncrementalBinaryTreeLibFactory.deploy()
+    const incrementalBinaryTreeLib =
+      await IncrementalBinaryTreeLibFactory.deploy();
 
-      await incrementalBinaryTreeLib.deployed()
+    await incrementalBinaryTreeLib.deployed();
 
-      logs &&
-        console.log(
-          `IncrementalBinaryTree library has been deployed to: ${incrementalBinaryTreeLib.address}`,
-        )
+    logs &&
+      console.log(
+        `IncrementalBinaryTree library has been deployed to: ${incrementalBinaryTreeLib.address}`
+      );
 
-      const chainID = hre.network.config.chainId
-      let target
-      const TargetContractInstance = await hre.ethers.getContractFactory(
-        'Target',
+    let target;
+    const TargetContractInstance = await hre.ethers.getContractFactory(
+      "Target",
+      {
+        libraries: {
+          IncrementalBinaryTree: incrementalBinaryTreeLib.address,
+        },
+      }
+    );
+    if (hre.network.name === "rinkeby") {
+      target = await TargetContractInstance.deploy(
+        instance.address,
+        RinkebyConnextHandler,
+        RinkebyConnextExecutor
+      );
+    } else if (hre.network.name === "kovan") {
+      target = await TargetContractInstance.deploy(
+        instance.address,
+        KovanConnextHandler,
+        KovanConnextExecutor,
         {
           libraries: {
             IncrementalBinaryTree: incrementalBinaryTreeLib.address,
           },
-        },
-      )
-      if (hre.network.name === 'rinkeby') {
-        target = await TargetContractInstance.deploy(
-          instance.address,
-          RinkebyConnextHandler,
-          RinkebyConnextExecutor,
-        )
-      } else if (chainID === 5) {
-        target = await TargetContractInstance.deploy(
-          instance.address,
-          GoerliConenxtHandler,
-          GoerliConnextExecutor,
-          {
-            libraries: {
-              IncrementalBinaryTree: incrementalBinaryTreeLib.address,
-            },
-          },
-        )
-      }
+        }
+      );
+    }
 
-      await target?.deployed()
+    await target?.deployed();
 
-      logs &&
-        console.log(`Target contract has been deployed to: ${target?.address}`)
+    logs &&
+      console.log(`Target contract has been deployed to: ${target?.address}`);
 
-      if (target) {
-        return target
-      }
-    },
-  )
+    if (target) {
+      return target;
+    }
+  });

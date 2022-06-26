@@ -1,8 +1,8 @@
 import { Contract } from 'ethers'
 import { task, types } from 'hardhat/config'
 
-const RinkebyConnextHandler = '0x2307Ed9f152FA9b3DcDfe2385d279D8C2A9DF2b0'
-const GoerliConenxtHandler = '0xEC3A723DE47a644b901DC269829bf8718F175EBF'
+const RinkebyConnextHandler = '0x2307Ed9f152FA9b3DcDfe2385d279D8C2A9DF2b0';
+const KovanConnextHandler = '0x3366A61A701FA84A86448225471Ec53c5c4ad49f';
 
 task('deploy_source', '')
   .addOptionalParam<boolean>('logs', 'Print the logs', true, types.boolean)
@@ -18,8 +18,8 @@ task('deploy_source', '')
       let source
       if (hre.network.name === 'rinkeby') {
         source = await SourceContractInstance.deploy(RinkebyConnextHandler)
-      } else if (chainID === 5) {
-        source = await SourceContractInstance.deploy(GoerliConenxtHandler)
+      } else if (hre.network.name === 'kovan') {
+        source = await SourceContractInstance.deploy(KovanConnextHandler)
       }
 
       await source?.deployed()
