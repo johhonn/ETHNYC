@@ -65,7 +65,7 @@ task('deploy_target', '')
           },
         },
       )
-      if (chainID === 4) {
+      if (hre.network.name === 'rinkeby') {
         target = await TargetContractInstance.deploy(
           instance.address,
           RinkebyConnextHandler,

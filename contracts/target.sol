@@ -13,7 +13,7 @@ import {IExecutor} from "@connext/nxtp-contracts/contracts/core/connext/interfac
 contract Target is SemaphoreCore, SemaphoreGroups, Ownable {
     mapping(uint256 => uint256) public groupDeposits;
     mapping(uint256 => uint256[]) public groupCommitments;
-    uint256 total;
+    uint256 public total;
     // The external verifier used to verify Semaphore proofs.
     IVerifier public verifier;
     address public originContract;
@@ -87,7 +87,7 @@ contract Target is SemaphoreCore, SemaphoreGroups, Ownable {
         uint32 destinationDomain,
         address asset
     ) public {
-        require(verify(_sig, nullifierHash, _proof, entityId), "");
+        require(verify(_sig, nullifierHash, _proof, entityId), "invalid proof");
         IERC20 token = IERC20(asset);
 
         // This contract approves transfer to Connext
@@ -124,7 +124,7 @@ contract Target is SemaphoreCore, SemaphoreGroups, Ownable {
     ) public view {
         uint256 root = getRoot(entityId);
 
-        _verifyProof(_sig, root, _nullifierHash, entityId, _proof, verifier);
+        _verifyProof(_sig, root, _nullifierHash, root, _proof, verifier);
     }
 
     function verify(
@@ -133,10 +133,9 @@ contract Target is SemaphoreCore, SemaphoreGroups, Ownable {
         uint256[8] calldata _proof,
         uint256 entityId
     ) internal returns (bool) {
-        uint8 depth = 20;
         uint256 root = getRoot(entityId);
 
-        _verifyProof(_sig, root, _nullifierHash, entityId, _proof, verifier);
+        _verifyProof(_sig, root, _nullifierHash, root, _proof, verifier);
 
         // Prevent double-greeting (nullifierHash = hash(root + identityNullifier)).
         // Every user can greet once.
