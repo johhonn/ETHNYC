@@ -11,7 +11,7 @@ contract Source {
     event CallbackCalled(bytes32 transferId, bool success, uint256 newValue);
 
     IConnextHandler public immutable connext;
-    uint256 depositValue = 100 ether;
+    uint256 public depositValue = 1 ether;
 
     constructor(IConnextHandler _connext) {
         connext = _connext;
@@ -26,7 +26,7 @@ contract Source {
         address asset,
         uint32 originDomain,
         uint32 destinationDomain,
-        uint256 newValue
+        uint256 commitment
     ) external payable {
         bytes4 selector;
         bool forceSlow;
@@ -36,7 +36,7 @@ contract Source {
         selector = bytes4(keccak256("addCommitment(uint256)"));
         forceSlow = true;
 
-        bytes memory callData = abi.encodeWithSelector(selector, newValue);
+        bytes memory callData = abi.encodeWithSelector(selector, commitment);
 
         CallParams memory callParams = CallParams({
             to: to,
@@ -59,7 +59,7 @@ contract Source {
 
         connext.xcall(xcallArgs);
 
-        emit UpdateInitiated(to, newValue, true);
+        emit UpdateInitiated(to, commitment, true);
     }
 
     /**

@@ -19,9 +19,10 @@ contract Target is SemaphoreCore, SemaphoreGroups, Ownable {
     address public originContract;
 
     // The origin Domain ID
-    uint32 public originDomain;
+    uint32 public originDomain = 2221;
     IConnextHandler public immutable connext;
     IExecutor public executor;
+    address public asset;
     // A modifier for permissioned function calls.
     // Note: This is an important security consideration. If your target
     //       contract function is meant to be permissioned, it must check
@@ -40,11 +41,12 @@ contract Target is SemaphoreCore, SemaphoreGroups, Ownable {
     constructor(
         address _verifier,
         IConnextHandler _connext,
-        address _executor
+        address _originContract
     ) {
         verifier = IVerifier(_verifier);
+        originContract = _originContract;
         connext = _connext;
-        executor = IExecutor(_executor);
+        executor = _connext.executor();
         createEntity(10**18);
         createEntity(5 * 10**18);
     }
@@ -56,8 +58,8 @@ contract Target is SemaphoreCore, SemaphoreGroups, Ownable {
         groupDeposits[total] = value;
     }
 
-    function addCommitment(uint256 identityCommitment) public onlyExecutor {
-        //default to pool one
+    function addCommitment(uint256 identityCommitment) public {
+        IERC20(asset).transferFrom(msg.sender, address(this), groupDeposits[1]);
         _addMember(1, identityCommitment);
         groupCommitments[1].push(identityCommitment);
     }
@@ -94,6 +96,13 @@ contract Target is SemaphoreCore, SemaphoreGroups, Ownable {
         //token.approve(address(connext), amount);
 
         // Empty callData because this is a simple transfer of funds
+        if (destinationDomain == connext.domain()) {
+            require(
+                token.transfer(to, groupDeposits[entityId]),
+                "transfer must do things"
+            );
+            return;
+        }
         CallParams memory callParams = CallParams({
             to: to,
             callData: "", // empty here because we're only sending funds
